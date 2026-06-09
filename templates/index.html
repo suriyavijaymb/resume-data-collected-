@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Automated Resume Parser</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#f4f4f4;
+    padding:20px;
+}
+
+.container{
+    width:80%;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:20px;
+    box-shadow:0px 0px 10px #ccc;
+}
+
+input[type=file],
+input[type=text]{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    margin-bottom:10px;
+}
+
+button{
+    padding:10px 20px;
+    background:#007bff;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+table th,
+table td{
+    border:1px solid #ddd;
+    padding:10px;
+}
+
+table th{
+    background:#007bff;
+    color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Upload Resume</h2>
+
+<input type="file" id="resume">
+
+<button onclick="uploadResume()">
+Upload Resume
+</button>
+
+<div id="result"></div>
+
+</div>
+
+<div class="card">
+
+<h2>Search Candidate</h2>
+
+<input type="text"
+id="searchBox"
+placeholder="Search by Name, Skill or Education">
+
+<button onclick="searchCandidate()">
+Search
+</button>
+
+<br><br>
+
+<table>
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Phone</th>
+<th>Skills</th>
+<th>Education</th>
+</tr>
+</thead>
+
+<tbody id="tableBody">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+function uploadResume(){
+
+    let file =
+    document.getElementById("resume").files[0];
+
+    let formData = new FormData();
+
+    formData.append("resume", file);
+
+    fetch("/upload",{
+        method:"POST",
+        body:formData
+    })
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        document.getElementById("result").innerHTML = `
+        <h3>Resume Details</h3>
+
+        <p><b>Name:</b> ${data.name}</p>
+        <p><b>Email:</b> ${data.email}</p>
+        <p><b>Phone:</b> ${data.phone}</p>
+        <p><b>Skills:</b> ${data.skills}</p>
+        <p><b>Education:</b> ${data.education}</p>
+        `;
+    });
+
+}
+
+function searchCandidate(){
+
+    let keyword =
+    document.getElementById("searchBox").value;
+
+    fetch(`/search?keyword=${keyword}`)
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        let rows = "";
+
+        data.forEach(item => {
+
+            rows += `
+            <tr>
+                <td>${item.name}</td>
+                <td>${item.email}</td>
+                <td>${item.phone}</td>
+                <td>${item.skills}</td>
+                <td>${item.education}</td>
+            </tr>
+            `;
+        });
+
+        document.getElementById("tableBody").innerHTML = rows;
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>

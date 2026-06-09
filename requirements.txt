@@ -1,0 +1,5 @@
+Flask
+pdfplumber
+spacy
+psycopg2
+Werkzeug
