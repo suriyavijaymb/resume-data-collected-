@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Resume Parser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+            margin-bottom: 30px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid #667eea;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .file-name {
+            color: #667eea;
+            font-size: 0.9em;
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .details-section {
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+
+        .details-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .details-section p {
+            color: #333;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            line-height: 1.6;
+        }
+
+        .details-section p strong {
+            color: #764ba2;
+            font-weight: 600;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-form input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .search-form input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .search-form button {
+            padding: 12px 30px;
+        }
+
+        .clear-btn {
+            background: #6c757d;
+        }
+
+        .clear-btn:hover {
+            background: #5a6268;
+            box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
+        }
+
+        /* Resumes List */
+        .resumes-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .resume-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .resume-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .resume-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+
+        .resume-card p {
+            color: #555;
+            margin: 8px 0;
+            font-size: 0.95em;
+        }
+
+        .resume-card p strong {
+            color: #764ba2;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .delete-btn {
+            flex: 1;
+            padding: 8px;
+            background: #dc3545;
+            font-size: 0.9em;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 1.1em;
+        }
+
+        .search-result-count {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .timestamp {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .status-message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Upload Section -->
+        <div class="container">
+            <h1>📄 Automated Resume Parser</h1>
+            <form id="uploadForm">
+                <div class="file-input-wrapper">
+                    <input type="file" name="resume" id="resume" required accept=".pdf,.doc,.docx,.txt">
+                    <label for="resume" class="file-input-label">📁 Choose Resume File</label>
+                    <div class="file-name" id="fileName"></div>
+                </div>
+                <button type="submit" id="submitBtn">🚀 Parse Resume</button>
+                <div id="uploadStatus" style="display: none;"></div>
+            </form>
+
+            <div id="detailsSection" style="display: none;">
+                <div class="details-section">
+                    <h3>✅ Parsed Details</h3>
+                    <p><strong>Name:</strong> <span id="detailsName"></span></p>
+                    <p><strong>Email:</strong> <span id="detailsEmail"></span></p>
+                    <p><strong>Phone:</strong> <span id="detailsPhone"></span></p>
+                    <p><strong>File:</strong> <span id="detailsFile"></span></p>
+                    <p><strong>Time:</strong> <span id="detailsTime"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <h2>🔍 Search Stored Resumes</h2>
+            <div class="search-form">
+                <input type="text" id="searchInput" placeholder="Search by name, email, or phone...">
+                <button id="searchBtn" onclick="performSearch()">🔎 Search</button>
+                <button id="clearBtn" class="clear-btn" onclick="clearSearch()" style="display: none;">✕ Clear</button>
+            </div>
+
+            <div id="searchResultCount" class="search-result-count" style="display: none;"></div>
+            <h2 style="margin-top: 0;">📋 All Stored Resumes (<span id="resumeCount">0</span>)</h2>
+
+            <div id="resumesContainer" class="resumes-container"></div>
+            <div id="emptyMessage" class="empty-message">Loading resumes...</div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize
+        loadAllResumes();
+
+        // Upload Form Handler
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('resume');
+            const file = fileInput.files[0];
+            const submitBtn = document.getElementById('submitBtn');
+            const uploadStatus = document.getElementById('uploadStatus');
+
+            if (!file) {
+                showUploadStatus('Please select a file', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('resume', file);
+
+            try {
+                submitBtn.disabled = true;
+                uploadStatus.innerHTML = '<p class="status-message" style="background-color: #e7f3ff; color: #004085; border-color: #b8daff;">⏳ Processing...</p>';
+                uploadStatus.style.display = 'block';
+
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showUploadStatus('✅ Resume parsed successfully!', 'success');
+                    displayParsedData(result.data);
+                    document.getElementById('uploadForm').reset();
+                    document.getElementById('fileName').textContent = '';
+                    await loadAllResumes();
+                } else {
+                    showUploadStatus('❌ ' + (result.error || 'Failed to parse resume'), 'error');
+                }
+            } catch (error) {
+                showUploadStatus('❌ Error: ' + error.message, 'error');
+                console.error('Upload error:', error);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        // File input label update
+        document.getElementById('resume').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            document.getElementById('fileName').textContent = fileName ? '✓ ' + fileName : '';
+        });
+
+        // Display parsed data
+        function displayParsedData(data) {
+            document.getElementById('detailsName').textContent = data.name || 'N/A';
+            document.getElementById('detailsEmail').textContent = data.email || 'N/A';
+            document.getElementById('detailsPhone').textContent = data.phone || 'N/A';
+            document.getElementById('detailsFile').textContent = data.filename || 'N/A';
+            document.getElementById('detailsTime').textContent = data.timestamp || 'N/A';
+            document.getElementById('detailsSection').style.display = 'block';
+        }
+
+        // Show upload status
+        function showUploadStatus(message, type) {
+            const uploadStatus = document.getElementById('uploadStatus');
+            const className = type === 'success' ? 'status-success' : 'status-error';
+            uploadStatus.innerHTML = `<p class="status-message ${className}"><strong>${message}</strong></p>`;
+            uploadStatus.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    uploadStatus.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Load all resumes
+        async function loadAllResumes() {
+            try {
+                const response = await fetch('/api/resumes');
+                if (!response.ok) {
+                    throw new Error('Failed to load resumes: ' + response.status);
+                }
+                const result = await response.json();
+                if (result.success === false) {
+                    showEmptyMessage('Error: ' + (result.error || 'Failed to load resumes'));
+                    return;
+                }
+                renderResumes(result.resumes || [], null);
+                document.getElementById('resumeCount').textContent = (result.resumes || []).length;
+            } catch (error) {
+                console.error('Error loading resumes:', error);
+                showEmptyMessage('Failed to load resumes: ' + error.message);
+            }
+        }
+
+        // Perform search
+        async function performSearch() {
+            const searchQuery = document.getElementById('searchInput').value.trim();
+            
+            if (!searchQuery) {
+                clearSearch();
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/search?search=' + encodeURIComponent(searchQuery));
+                if (!response.ok) {
+                    throw new Error('Search failed: ' + response.status);
+                }
+                const result = await response.json();
+                
+                if (result.success === false) {
+                    showEmptyMessage('Error: ' + (result.error || 'Search failed'));
+                    return;
+                }
+                
+                document.getElementById('searchResultCount').textContent = 'Found ' + result.count + ' result(s)';
+                document.getElementById('searchResultCount').style.display = 'block';
+                document.getElementById('clearBtn').style.display = 'inline-block';
+                
+                renderResumes(result.resumes || [], searchQuery);
+            } catch (error) {
+                console.error('Search error:', error);
+                showEmptyMessage('Failed to search: ' + error.message);
+            }
+        }
+
+        // Clear search
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResultCount').style.display = 'none';
+            document.getElementById('clearBtn').style.display = 'none';
+            loadAllResumes();
+        }
+
+        // Render resumes
+        function renderResumes(resumes, searchQuery) {
+            const container = document.getElementById('resumesContainer');
+            const emptyMessage = document.getElementById('emptyMessage');
+
+            if (resumes.length === 0) {
+                if (searchQuery) {
+                    showEmptyMessage('No resumes found matching "' + searchQuery + '"');
+                } else {
+                    showEmptyMessage('No resumes stored yet. Upload your first resume above!');
+                }
+                container.innerHTML = '';
+                return;
+            }
+
+            emptyMessage.style.display = 'none';
+            container.innerHTML = resumes.map((resume, index) => {
+                const html = `
+                <div class="resume-card">
+                    <h4>👤 ${escapeHtml(resume.name)}</h4>
+                    <p><strong>📧 Email:</strong> ${resume.email ? escapeHtml(resume.email) : 'N/A'}</p>
+                    <p><strong>📞 Phone:</strong> ${resume.phone ? escapeHtml(resume.phone) : 'N/A'}</p>
+                    <p><strong>📄 File:</strong> ${escapeHtml(resume.filename)}</p>
+                    <div class="timestamp">⏰ ${resume.timestamp}</div>
+                    <div class="card-actions">
+                        <button class="delete-btn" data-index="${index}">🗑️ Delete</button>
+                    </div>
+                </div>
+                `;
+                return html;
+            }).join('');
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    deleteResume(parseInt(this.dataset.index));
+                });
+            });
+        }
+
+        // Show empty message
+        function showEmptyMessage(message) {
+            const emptyMessage = document.getElementById('emptyMessage');
+            emptyMessage.textContent = message;
+            emptyMessage.style.display = 'block';
+            document.getElementById('resumesContainer').innerHTML = '';
+        }
+
+        // Delete resume
+        async function deleteResume(index) {
+            if (!confirm('Are you sure you want to delete this resume?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/delete/' + index, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Delete failed: ' + response.status);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Check if searching
+                    if (document.getElementById('searchInput').value.trim()) {
+                        performSearch();
+                    } else {
+                        loadAllResumes();
+                    }
+                } else {
+                    alert('Failed to delete resume: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('Error deleting resume: ' + error.message);
+            }
+        }
+
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // HTML escape function
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>
